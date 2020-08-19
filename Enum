@@ -1,0 +1,170 @@
+<?php
+
+/**
+ * This is a parent Enum class for all sub enum classes.
+ *
+ * @author Kenny Fang
+ * @version 0.0.1
+ */
+abstract class Enum
+{
+    private static $count = false;
+    // added this line to your sub enum class for holding the enum values in own sub enum class.
+    // protected static $__values = [];
+
+    /**IMPORTANT** bellow two vars defined as static, but you only use them as private normal vars,
+    // because if you set value as static var it will be make all of enum instances the same ordinal and name*/
+    private  $ordinal;
+    private  $name;
+
+
+    /**
+     * Enum constructor.
+     * Auto generate sub enum instances by collecting sub enum class variables.
+     */
+    public function __construct()
+    {
+        if (self::$count == false) {
+            self::$count = true;
+            $class_enums = $this->get_class_enums($this);
+            foreach ($class_enums as $key => $value) {
+                // avoid duplication if contains
+                if (self::valueOf($key)) {
+                    continue;
+                }
+
+                $this->ordinal = sizeof(static::$__values);
+                $this->name = $key;
+                $enum_cloned = clone $this;
+                $enum_cloned::$$key = $enum_cloned;
+                static::$__values[$this->ordinal] = $enum_cloned;
+            }
+            self::$count = false;
+        }
+    }
+
+    /**
+     * Return sub enum class enums definitions as array;
+     *
+     * @param $instance
+     * @return array
+     */
+    private function get_class_enums($instance)
+    {
+        $class_name = get_class($instance);
+        $class_vars = get_class_vars($class_name);
+
+        unset($class_vars["count"]);
+        unset($class_vars["ordinal"]);
+        unset($class_vars["name"]);
+        unset($class_vars["__values"]);
+
+        return $class_vars;
+    }
+
+    /**
+     * Return all sub enum instances
+     *
+     * @return sub enums as array
+     */
+    public static function values()
+    {
+        return static::$__values;
+    }
+
+    /**
+     * Return the instance of sub enum by the specified $name, if not found return null.
+     *
+     * @param $name
+     * @return the instance of sub enum
+     */
+    public static function valueOf($name)
+    {
+        foreach (static::$__values as $value) {
+            if ($value->name() == $name) {
+                return $value;
+            }
+        }
+    }
+
+    /**
+     * Return true if this enum instance equals to the specified $ENUM.
+     *
+     * @param $ENUM
+     * @return bool
+     */
+    public function equals($ENUM)
+    {
+        return $this == $ENUM;
+    }
+
+    /**
+     * Return the ordinal of this enum instance.
+     *
+     * @return int
+     */
+    public function ordinal()
+    {
+        return $this->ordinal;
+    }
+
+    /**
+     * Return the name of this enum instance.
+     *
+     * @return mixed
+     */
+    public function name()
+    {
+        return $this->name;
+    }
+
+    /**
+     * Return the name of this enum instance.
+     *
+     * @return int|string
+     */
+    public function __toString()
+    {
+        return $this->name;
+    }
+
+    /**
+     * Set the ordinal of this enum instance.
+     *
+     * @param int $ordinal
+     */
+    private function setOrdinal(int $ordinal)
+    {
+        $this->ordinal = $ordinal;
+    }
+
+    /**
+     * Set the name of this enum instance.
+     *
+     * @param int|string $name
+     */
+    private function setName($name)
+    {
+        $this->name = $name;
+    }
+
+    /**
+     * Return cloned instance of this enum  instance.
+     * 
+     * @return mixed
+     */
+    public function __clone()
+    {
+        $class = get_class($this);
+
+        $instance = new $class;
+        $instance->setOrdinal($this->ordinal);
+        $instance->setName($this->name);
+
+        return $instance;
+    }
+
+
+}
+// please instance your sub enum class like bellow after you extends this class
+// new SimpleEnum();
